@@ -101,6 +101,96 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(new_product.available, product.available)
         self.assertEqual(new_product.category, product.category)
 
-    #
-    # ADD YOUR TEST CASES HERE
-    #
+    def test_read_a_product(self):
+        """It should read a product."""
+        product = ProductFactory()
+        app.logger.debug("Debugging information product name {product}")
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        found_product = Product.find(product.id)
+        self.assertEqual(found_product.id, product.id)
+
+    def test_update_a_product(self):
+        """It should update a product."""
+        product = ProductFactory()
+        app.logger.debug("Debugging information product name {product}")
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        product.description = "Updated description"
+        original_id = product.id
+        product.update()
+        self.assertEqual(product.id, original_id)
+        self.assertEqual(product.description, "Updated description")
+
+    def test_delete_a_product(self):
+        """It should delete a product."""
+        product = ProductFactory()
+        product.create()
+        self.assertEqual(len(Product.all()), 1)
+        product.delete()
+        self.assertEqual(len(Product.all()), 0)
+
+    def test_list_all_products(self):
+        """It should list all products in the database."""
+        self.assertEqual(Product.all(), [])
+        for _ in range(5):
+            product = ProductFactory()
+            product.create()
+        self.assertEqual(len(Product.all()), 5)
+
+    def test_find_by_name(self):
+        """It should find a product by name."""
+        products = ProductFactory.create_batch(5)
+        for product in products:
+            product.create()
+        name = products[0].name
+        count = sum(1 for product in products if product.name == name)
+        found = Product.find_by_name(name)
+        self.assertEqual(len(list(found)), count)
+        for product in found:
+            self.assertEqual(product.name, name)
+
+    def test_find_by_availability(self):
+        """It should find products by availability."""
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+        available = products[0].available
+        count = sum(1 for product in products if product.available == available)
+        found = Product.find_by_availability(available)
+        self.assertEqual(len(list(found)), count)
+        for product in found:
+            self.assertEqual(product.available, available)
+
+    def test_find_by_category(self):
+        """It should find products by category."""
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+        category = products[0].category
+        count = sum(1 for product in products if product.category == category)
+        found = Product.find_by_category(category)
+        self.assertEqual(len(list(found)), count)
+        for product in found:
+            self.assertEqual(product.category, category)
+
+    def test_find_by_category_empty(self):
+        """Test that no products are returned for a category with no products"""
+        # Assume no products exist in this category
+        category = Category.FOOD  # Assume this category is empty
+        found_products = Product.find_by_category(category)
+        self.assertEqual(len(list(found_products)), 0)
+
+    def test_find_by_name_with_empty_name(self):
+        """It should return an empty list when finding by an empty name"""
+        # Pass an empty string to the method under test
+        empty_name_products = Product.find_by_name('')
+        self.assertEqual(empty_name_products, [])
+
+    def test_find_by_price_with_invalid_price(self):
+        """It should handle invalid price value and return an empty list"""
+        # Provide an invalid price value that matches your application context
+        invalid_price_products = Product.find_by_price('invalid_price_value')
+        self.assertEqual(invalid_price_products, [])
